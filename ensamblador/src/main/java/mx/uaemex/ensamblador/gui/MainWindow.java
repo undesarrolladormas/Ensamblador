@@ -55,14 +55,14 @@ public class MainWindow extends JFrame implements ActionListener {
         JMenu menu = new JMenu("File");
         bar.add(menu);
         
-        var openItem = new JMenuItem("Open");
+        JMenuItem openItem = new JMenuItem("Open");
         openItem.setAccelerator(KeyStroke.getKeyStroke('O',Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         menu.add(openItem);
         openItem.addActionListener(this);
         
         JMenu exec = new JMenu("Execution");
         bar.add(exec);
-        var listarItem = new JMenuItem("List");
+        JMenuItem listarItem = new JMenuItem("List");
         listarItem.setAccelerator(KeyStroke.getKeyStroke('P',Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         exec.add(listarItem);
         
