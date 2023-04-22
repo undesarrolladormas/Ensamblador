@@ -1,5 +1,6 @@
 package mx.uaemex.ensamblador.gui;
 
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -12,6 +13,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,13 +27,18 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
 
-public class MainWindow extends JFrame implements ActionListener {
+import mx.uaemex.ensamblador.classes.Elementos;
+import mx.uaemex.ensamblador.classes.Listado;
+
+public class MainWindow extends JFrame {
     
     public MainWindow()
     {
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.setSize(1080, 720);
+        this.setMinimumSize(new Dimension(800, 600));
         this.init();
     }
     
@@ -39,11 +46,12 @@ public class MainWindow extends JFrame implements ActionListener {
     private JTable tableDetections;
     private JTable tableSemantica;
     private JTable fullInfo;
+    private DefaultTableModel modelDetections;
     
-    private String[][] values = {{"1","2"},{"1","3"}};
+    private String[][] values2 = {{"1","2"},{"1","3"}};
     private String[][] todo = {{"1","2","3","4","5"}};
     
-    private String content = "";
+    private ArrayList<String> content;
     
     private void init()
     {
@@ -58,16 +66,26 @@ public class MainWindow extends JFrame implements ActionListener {
         JMenuItem openItem = new JMenuItem("Open");
         openItem.setAccelerator(KeyStroke.getKeyStroke('O',Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         menu.add(openItem);
-        openItem.addActionListener(this);
+        openItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+				openFile();
+			}
+        });
         
         JMenu exec = new JMenu("Execution");
         bar.add(exec);
         JMenuItem listarItem = new JMenuItem("List");
         listarItem.setAccelerator(KeyStroke.getKeyStroke('P',Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         exec.add(listarItem);
-        
+        listarItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                listar();
+            }
+        });
+
         input = new JTextArea();
         input.setFont(new Font("Consolas",Font.PLAIN,14));
+        input.setEnabled(false);
         JScrollPane scrollPane = new JScrollPane(input,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         
         gbc.insets = new Insets(10,10,10,10);
@@ -89,8 +107,15 @@ public class MainWindow extends JFrame implements ActionListener {
         gbc.weighty = 1;
         gbc.fill = GridBagConstraints.BOTH;
         
-        String[] columnNames = {"Elemento","Tipo"};
-        tableDetections = new JTable(values,columnNames);
+        String[] columnNames = {"No.","Elemento","Tipo"};
+        
+        modelDetections = new DefaultTableModel();
+        modelDetections.setColumnIdentifiers(columnNames);
+        tableDetections = new JTable(modelDetections) {
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            };
+        };
         this.add(new JScrollPane(tableDetections),gbc);
         
         gbc.gridx = 1;
@@ -100,7 +125,8 @@ public class MainWindow extends JFrame implements ActionListener {
         gbc.weightx = 1;
         gbc.weighty = 1;
         gbc.fill = GridBagConstraints.BOTH;
-        this.tableSemantica = new JTable(values,columnNames);
+        String[] columnNames_2 = {"Linea","Estado"};
+        this.tableSemantica = new JTable(values2,columnNames_2);
         this.add(new JScrollPane(this.tableSemantica),gbc);
         
         String[] columnNamesFull = {"Simbolo","Tipo","Valor","Tamaño","Direccion"};
@@ -116,43 +142,46 @@ public class MainWindow extends JFrame implements ActionListener {
         
         
     }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if(((JMenuItem)e.getSource()).getText().equals("Open") )
-        {
-            this.openFile();
-        }
-    }
     
     private void openFile()
     {
-        content = "";
+        input.setText("");
+        content = new ArrayList<>();
         JFileChooser filechoose = new JFileChooser();
         FileNameExtensionFilter filtro = new FileNameExtensionFilter("*.asm", "asm");
         filechoose.setFileFilter(filtro);
         filechoose.showOpenDialog(this);
         File archivo = filechoose.getSelectedFile();
         if (archivo.exists()) {
-            BufferedReader br = null;
             try {
-                br = new BufferedReader(new FileReader(archivo));
+                BufferedReader br = new BufferedReader(new FileReader(archivo));
                 String st;
-                while((st = br.readLine()) != null) content += st + "\n";
-                this.input.setText(content);
+                while((st = br.readLine()) != null)
+                {
+                    content.add(st);
+                    this.input.setText(this.input.getText() + st + "\n");
+                }
+                br.close();
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
                 Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
-            } finally {
-                try {
-                    br.close();
-                } catch (IOException ex) {
-                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
-                }
             }
-            
         }
+    }
+
+    private void listar()
+    {
+        ArrayList<Elementos> aux = Listado.clasificarElementos(Listado.separarElementos(Listado.quitarComentarios(content)));
+        modelDetections.setRowCount(0);
+        Object[] row = new Object[3];
+        for (int i = 0; i < aux.size(); i++) {
+            row[0] = i+1;
+            row[1] = aux.get(i).getNombre();
+            row[2] = aux.get(i).getTipo().getCadena();
+            modelDetections.addRow(row);
+        }
+        tableDetections.setModel(modelDetections);
     }
     
     
