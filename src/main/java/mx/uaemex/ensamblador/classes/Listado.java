@@ -44,7 +44,7 @@ public class Listado {
         for (String string : lista) {
             for (TipoElementos elemento : TipoElementos.values()) {
                 if (string.matches(elemento.getCondicion())) {
-                    listanueva.add(new Elementos(string, elemento));
+                    listanueva.add(new Elementos(string, elemento.getCadena()));
                     break;
                 }
             }

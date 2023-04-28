@@ -1,37 +1,16 @@
 package mx.uaemex.ensamblador.classes;
 
-import mx.uaemex.ensamblador.Enums.TipoElementos;
-
 public class Elementos {
 	
     private String nombre;
-    private TipoElementos tipo;
-    private String estado;
-    private String descrip;
-    
-    
-    public String getEstado() {
-		return estado;
-	}
+    private String tipo;
 
-	public void setEstado(String estado) {
-		this.estado = estado;
-	}
-
-	public String getDescrip() {
-		return descrip;
-	}
-
-	public void setDescrip(String descrip) {
-		this.descrip = descrip;
-	}
-
-    public Elementos(String nombre, TipoElementos tipo) {
+    public Elementos(String nombre, String tipo) {
         this.setNombre(nombre); 
         this.setTipo(tipo);
     }
 
-    public TipoElementos getTipo() {
+    public String getTipo() {
         return tipo;
     }  
 
@@ -39,7 +18,7 @@ public class Elementos {
 		this.nombre = nombre;
 	}
 
-	public void setTipo(TipoElementos tipo) {
+	public void setTipo(String tipo) {
 		this.tipo = tipo;
 	}
 

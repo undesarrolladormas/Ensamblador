@@ -27,8 +27,8 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.table.DefaultTableModel;
 
+import mx.uaemex.ensamblador.Tabla.TablaElementos;
 import mx.uaemex.ensamblador.classes.Elementos;
 import mx.uaemex.ensamblador.classes.Listado;
 
@@ -37,16 +37,16 @@ public class MainWindow extends JFrame {
     public MainWindow()
     {
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        this.setTitle("Ensamblador");
         this.setSize(1080, 720);
         this.setMinimumSize(new Dimension(800, 600));
         this.init();
     }
     
     private JTextArea input;
-    private JTable tableDetections;
     private JTable tableSemantica;
     private JTable fullInfo;
-    private DefaultTableModel modelDetections;
+    private TablaElementos tablaElementos;
     
     private String[][] values2 = {{"1","2"},{"1","3"}};
     private String[][] todo = {{"1","2","3","4","5"}};
@@ -93,7 +93,7 @@ public class MainWindow extends JFrame {
         gbc.gridy = 0;
         gbc.gridwidth = 1;
         gbc.gridheight = 2;
-        gbc.weightx = 1;
+        gbc.weightx = 2;
         gbc.weighty = 1;
         gbc.fill = GridBagConstraints.BOTH;
         
@@ -108,15 +108,8 @@ public class MainWindow extends JFrame {
         gbc.fill = GridBagConstraints.BOTH;
         
         String[] columnNames = {"No.","Elemento","Tipo"};
-        
-        modelDetections = new DefaultTableModel();
-        modelDetections.setColumnIdentifiers(columnNames);
-        tableDetections = new JTable(modelDetections) {
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            };
-        };
-        this.add(new JScrollPane(tableDetections),gbc);
+        //! Aqui se agregan los elementos a la tabla
+        this.add(tablaElementos = new TablaElementos(columnNames),gbc);
         
         gbc.gridx = 1;
         gbc.gridy = 1;
@@ -139,8 +132,6 @@ public class MainWindow extends JFrame {
         gbc.weighty = 1;
         gbc.fill = GridBagConstraints.BOTH;
         this.add(new JScrollPane(this.fullInfo),gbc);
-        
-        
     }
     
     private void openFile()
@@ -152,6 +143,7 @@ public class MainWindow extends JFrame {
         filechoose.setFileFilter(filtro);
         filechoose.showOpenDialog(this);
         File archivo = filechoose.getSelectedFile();
+        if(archivo == null) return;
         if (archivo.exists()) {
             try {
                 BufferedReader br = new BufferedReader(new FileReader(archivo));
@@ -173,15 +165,8 @@ public class MainWindow extends JFrame {
     private void listar()
     {
         ArrayList<Elementos> aux = Listado.clasificarElementos(Listado.separarElementos(Listado.quitarComentarios(content)));
-        modelDetections.setRowCount(0);
-        Object[] row = new Object[3];
-        for (int i = 0; i < aux.size(); i++) {
-            row[0] = i+1;
-            row[1] = aux.get(i).getNombre();
-            row[2] = aux.get(i).getTipo().getCadena();
-            modelDetections.addRow(row);
-        }
-        tableDetections.setModel(modelDetections);
+        tablaElementos.setElementos(aux);
+        
     }
     
     
