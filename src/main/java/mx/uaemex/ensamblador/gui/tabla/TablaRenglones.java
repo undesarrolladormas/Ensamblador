@@ -1,4 +1,4 @@
-package mx.uaemex.ensamblador.Tabla;
+package mx.uaemex.ensamblador.gui.tabla;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -11,25 +11,22 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.List;
 
-import mx.uaemex.ensamblador.classes.Elementos;
 
-public class TablaElementos extends JPanel{
-
+public class TablaRenglones extends JPanel {
     private JTable tabla;
     private JComboBox<Integer> noPaginas;
     private DefaultTableModel modelo;
-    private List<Elementos> elementos;
+    private List<Object[]> elementos;
     private int pagina;
     private int noElementos;
 
-
-    public void setElementos(List<Elementos> elementos) {
+    public void setElementos(List<Object[]> elementos) {
         this.elementos = elementos;
         this.pagina = 0;
         this.changePage(0);
     }
 
-    public TablaElementos(String[] headers) {
+    public TablaRenglones(String[] headers) {
         super(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         tabla = new JTable(modelo = new DefaultTableModel(null, headers)){
@@ -44,7 +41,6 @@ public class TablaElementos extends JPanel{
         btnAnterior.addActionListener(e -> changePage(-1));
         JButton btnSiguiente = new JButton("Siguiente");
         btnSiguiente.addActionListener(e -> changePage(1));
-
 
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -83,10 +79,10 @@ public class TablaElementos extends JPanel{
         noPaginas = new JComboBox<Integer>(new Integer[] {10, 15, 20, 40, 50});
         noPaginas.addActionListener(e -> {
             this.noElementos = (int) noPaginas.getSelectedItem();
+            this.pagina = 0;
             this.changePage(0);
         });
         super.add(noPaginas, gbc);
-
     }
 
     private void changePage(int pa) {
@@ -99,18 +95,16 @@ public class TablaElementos extends JPanel{
 
         if(this.pagina == lastpage) {
             for(int i = this.pagina * this.noElementos; i < this.elementos.size(); i++) {
-                Object[] row = {i + 1, this.elementos.get(i).getNombre(), this.elementos.get(i).getTipo()};
+                Object[] row = {i + 1, this.elementos.get(i)[0], this.elementos.get(i)[1]};
                 this.modelo.addRow(row);
             }
         } else {
             for(int i = this.pagina * this.noElementos; i < (this.pagina + 1) * this.noElementos; i++) {
-                Object[] row = {i + 1, this.elementos.get(i).getNombre(), this.elementos.get(i).getTipo()};
+                Object[] row = {i + 1, this.elementos.get(i)[0], this.elementos.get(i)[1]};
                 this.modelo.addRow(row);
             }
         }
         tabla.setModel(modelo);
 
     }
-
-
 }

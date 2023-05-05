@@ -6,7 +6,7 @@
 
   <groupId>mx.uaemex.ensamblador</groupId>
   <artifactId>ensamblador</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.2</version>
 
   <name>ensamblador</name>
   <!-- FIXME change it to the project's website -->
@@ -78,6 +78,7 @@
           <artifactId>maven-assembly-plugin</artifactId>
           <executions>
             <execution>
+              <id>make-assembly</id> 
               <phase>package</phase>
               <goals>
                 <goal>single</goal>
@@ -88,6 +89,9 @@
             <descriptorRefs>
               <descriptorRef>jar-with-dependencies</descriptorRef>
             </descriptorRefs>
+            <appendAssemblyId>true</appendAssemblyId>
+            <finalName>${project.artifactId}-${project.version}</finalName>
+            <outputDirectory>${project.build.directory}</outputDirectory>
             <archive>
               <manifest>
                 <mainClass>mx.uaemex.ensamblador.App</mainClass>
