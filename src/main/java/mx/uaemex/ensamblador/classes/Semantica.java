@@ -224,34 +224,29 @@ public class Semantica {
             case "AAS":
             case "CBW":
                 if (parts.length == 1) {
-                    cad = "Correcto";
+                    return cad = "Correcto";
                 } else {
-                    cad = "La instrucción no lleva operandos";
+                    return cad += "La instrucción no lleva operandos";
                 }
-                break;
-            // Instrucciones de salto
-            case "JNZ":
-            case "JZ":
+                // Instrucciones de salto
             case "JGE":
             case "JNA":
+            case "JNC":
+            case "JNZ":
+            case "JZ":
             case "LOOPNZ":
                 if (parts.length == 2 && Etiq.size() > 0) {
                     for (int i = 0; i < Etiq.size(); i++) {
                         if (Etiq.get(i).equalsIgnoreCase(parts[1])) {
-                            cad = "Correcto";
-                            break;
-                        } else {
-                            cad = "Incorrecto: No se ha definido la etiqueta";
+                            return cad = "Correcto";
                         }
                     }
-                } else {
-                    cad += "No se ha definido la etiqueta";
                 }
-                break;
-
-                
+                return cad += "No se ha definido la etiqueta";
             // Instrucciones un operando
             case "NOT":
+            case "NEG":
+            case "DIV":
                 if (parts[1].equalsIgnoreCase("WORD") || parts[1].equalsIgnoreCase("BYTE")) {
                     if (parts[2].equalsIgnoreCase("PTR")) {
                         aux = "";
@@ -261,7 +256,7 @@ public class Semantica {
                         if (!Desplazamiento(linea, Cons, Simb).equalsIgnoreCase("Null")) {
                             return cad = "Correcto";
                         } else {
-                            cad += "Se esperaba un acceso a memoria o registro";
+                            return cad += "Se esperaba un acceso a memoria o registro";
                         }
                     }
                 }
@@ -273,16 +268,44 @@ public class Semantica {
                 }
                 for (int i = 0; i < Simb.size(); i++) {
                     if (parts[1].equalsIgnoreCase(Simb.get(i))) {
-                        cad = "Correcto";
-                        break;
-                    } else {
-                        cad = "Incorrecto: Se esperaba un acceso a memoria o registro";
+                        return cad = "Correcto";
                     }
                 }
-                break;
+                return cad += "Se esperaba un acceso a memoria o registro";
+            case "PUSH":
+                if (parts[1].equalsIgnoreCase("WORD") || parts[1].equalsIgnoreCase("BYTE")) {
+                    if (parts[2].equalsIgnoreCase("PTR")) {
+                        aux = "";
+                        for (int i = 3; i < parts.length; i++) {
+                            aux += " " + parts[i];
+                        }
+                        if (!Desplazamiento(linea, Cons, Simb).equalsIgnoreCase("Null")) {
+                            return cad = "Correcto";
+                        } else {
+                            return cad += "Se esperaba un acceso a memoria o registro";
+                        }
+                    }
+                }
+                if (!Desplazamiento(linea, Cons, Simb).equalsIgnoreCase("Null")) {
+                    return cad = "Correcto";
+                }
+                if (parts[1].matches(reg)) {
+                    return cad = "Correcto";
+                }
+                for (int i = 0; i < Simb.size(); i++) {
+                    if (parts[1].equalsIgnoreCase(Simb.get(i))) {
+                        return cad = "Correcto";
+                    }
+                }
+                if (parts[1].matches(instan + "|" + hex + "|" + bin + "|" + Cons)) {
+                    return cad = "Correcto";
+                }
+
+                return cad += "Se esperaba un acceso a memoria o registro";
 
             // Instrucciones dos operandos
             case "ADC":
+            case "TEST":
                 for (int i = 0; i < Simb.size(); i++) {
                     if (parts.length == 3 && (parts[1].matches(reg) && parts[2].equalsIgnoreCase(Simb.get(i)))) {
                         return cad = "Correcto";
@@ -307,9 +330,9 @@ public class Semantica {
                             aux += " " + parts[i];
                         }
                         if (!Desplazamiento(linea, Cons, Simb).equalsIgnoreCase("Null")) {
-                            cad = "Correcto";
+                            return cad = "Correcto";
                         } else {
-                            cad += "Se esperaba un acceso a memoria";
+                            return cad += "Se esperaba un acceso a memoria";
                         }
                     }
                 } else if (parts.length >= 4 && (parts[1].equalsIgnoreCase("WORD") || parts[1].equalsIgnoreCase("BYTE"))
@@ -320,9 +343,9 @@ public class Semantica {
                             aux += " " + parts[i];
                         }
                         if (!Desplazamiento(linea, Cons, Simb).equalsIgnoreCase("Null")) {
-                            cad = "Correcto";
+                            return cad = "Correcto";
                         } else {
-                            cad += "Se esperaba un acceso a memoria";
+                            return cad += "Se esperaba un acceso a memoria";
                         }
                     }
                 } else if (parts.length >= 4 && (parts[1].equalsIgnoreCase("WORD") || parts[1].equalsIgnoreCase("BYTE"))
@@ -333,9 +356,9 @@ public class Semantica {
                             aux += " " + parts[i];
                         }
                         if (!Desplazamiento(linea, Cons, Simb).equalsIgnoreCase("Null")) {
-                            cad = "Correcto";
+                            return cad = "Correcto";
                         } else {
-                            cad += "Se esperaba un acceso a memoria";
+                            return cad += "Se esperaba un acceso a memoria";
                         }
                     }
 
@@ -351,9 +374,9 @@ public class Semantica {
                         && (parts[1].matches(reg) && parts[2].matches(instan + "|" + hex + "|" + bin + "|" + Cons))) {
                     return cad = "Correcto";
                 } else if (parts.length >= 3 && parts.length < 5) {
-                    cad += "Error, la instrucción solo lleva 2 operandos";
+                    return cad += "Error, la instrucción solo lleva 2 operandos";
                 } else if (parts.length < 3) {
-                    cad += "Error, a la instrucción le faltan operandos";
+                    return cad += "Error, a la instrucción le faltan operandos";
                 }
                 break;
             case "LES":
@@ -381,6 +404,41 @@ public class Semantica {
                 } else {
                     return cad += "Se esperaba un registro y memoria";
                 }
+            case "SAR":
+                if (parts.length < 3)
+                    return cad += "Error, a la instrucción le faltan operandos";
+                else if (parts.length >= 3 && parts.length < 5)
+                    return cad += "Error, la instrucción solo lleva 2 operandos";
+                else if (parts.length == 3
+                        && (parts[1].matches(reg) && parts[2].matches(instan + "|" + hex + "|" + bin + "|" + Cons)))
+                    return cad = "Correcto";
+                else if (parts.length == 3)
+                    for (int i = 0; i < Simb.size(); i++) {
+                        if (parts.length == 3 && (parts[1].equalsIgnoreCase(Simb.get(i))
+                                && parts[2].matches(instan + "|" + hex + "|" + bin + "|" + Cons)))
+                            return cad = "Correcto";
+                        if (parts.length == 3
+                                && (parts[1].equalsIgnoreCase(Simb.get(i)) && parts[2].equalsIgnoreCase("CL")))
+                            return cad = "Correcto";
+                    }
+                else if (parts.length >= 5 && ( parts[1].equalsIgnoreCase("WORD")
+                        || parts[1].equalsIgnoreCase("BYTE"))) {
+                    if (parts[2].equalsIgnoreCase("PTR")) {
+                        aux = "";
+                        for (int i = 3; i < parts.length; i++) {
+                            aux += " " + parts[i];
+                        }
+                        if (!Desplazamiento(linea, Cons, Simb).equalsIgnoreCase("Null")) {
+                            return cad = "Correcto";
+                        } else {
+                            return cad += "Se esperaba un acceso a memoria";
+                        }
+                    }
+                } else if (parts.length == 3 && (parts[1].matches(reg) && parts[2].equalsIgnoreCase("CL")))
+                    return cad = "Correcto";
+                else
+                    return cad += "Error, la combinación de operandos no es válida";
+                break;
             default:
                 for (int i = 0; i < Etiq.size(); i++) {
                     if (parts[0].equalsIgnoreCase(Etiq.get(i) + ":")) {
@@ -392,8 +450,8 @@ public class Semantica {
                     cad = "Correcto";
                 } else {
                     cad += "Instrucción no reconocida";
-                    break;
                 }
+                break;
         }
         return cad;
     }

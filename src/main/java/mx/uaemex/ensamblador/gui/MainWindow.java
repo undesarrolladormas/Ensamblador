@@ -90,15 +90,11 @@ public class MainWindow extends JFrame {
         JMenuItem listarItem = new JMenuItem("List");
         listarItem.setAccelerator(KeyStroke.getKeyStroke('P', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         exec.add(listarItem);
-        listarItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                listar();
-            }
-        });
+        listarItem.addActionListener((e -> {listar();}));
 
         input = new JTextArea();
         input.setFont(new Font("Consolas", Font.PLAIN, 14));
-        input.setEnabled(false);
+        input.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(input, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
@@ -135,7 +131,12 @@ public class MainWindow extends JFrame {
         this.add(tablaRenglones = new TablaRenglones(columnNames_2), gbc);
 
         String[] columnNamesFull = { "Simbolo", "Tamaño", "Tipo", "Valor", "Direccion" };
-        simbolos = new JTable(modeloSimbolos = new DefaultTableModel(null, columnNamesFull));
+        simbolos = new JTable(modeloSimbolos = new DefaultTableModel(null, columnNamesFull)){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.gridwidth = 2;
@@ -191,15 +192,13 @@ public class MainWindow extends JFrame {
         var DS = segmentos.DS(texto);
         for (String a : elementos.sepElementos(DS)) {
             tokens.add(a);
-            tipos.add(elementos.clasElementoDS(a)); // Insertar en la tabla de Clasifica los elementos del Data Segment
+            tipos.add(elementos.clasElementoDS(a));
         }
-
         var SS = segmentos.SS(texto);
         for (String a : elementos.sepElementos(SS)) {
             tokens.add(a);
-            tipos.add(elementos.clasElementoSS(a)); // Insertar en la tabla de Clasifica los elementos del Stack Segment
+            tipos.add(elementos.clasElementoSS(a));
         }
-
         var CS = segmentos.CS(texto);
         for (String a : elementos.sepElementos(CS)) {
             tokens.add(a);
@@ -208,12 +207,8 @@ public class MainWindow extends JFrame {
             if (aux.equalsIgnoreCase("Etiqueta")) {
                 Etiq.add(a.substring(0, a.length() - 1));
             }
-            // Insertar en la tabla de Clasifica los elementos del Code Segment
         }
-
-        // Actualiza la tabla de elementos
         tablaElementos.setElementos(tokens, tipos);
-
         // * Analisis semantico
         Semantica se = new Semantica();
         ArrayList<Object[]> semantica = new ArrayList<>();
@@ -225,11 +220,7 @@ public class MainWindow extends JFrame {
         // String contH = "0000";//Contador hexadecimal
         for (var a : DS) {
             var aux = se.semanticaDS(a);
-            semantica.add(new Object[] { a, aux }); // Insertar en la tabla de Semantica los valores correctos e
-                                                    // incorrectos del Data Segment
-            // ! Aqui va la generacion de la tabla de simbolos
-            // ! Tambien con esa tabla se recupera el identificador de las variables y
-            // constantes
+            semantica.add(new Object[] { a, aux });
             if (aux.equalsIgnoreCase("Correcto")) {
                 String[] vals = a.split(" ");
                 if (vals.length > 2) {
@@ -250,11 +241,7 @@ public class MainWindow extends JFrame {
                                 String.format("%04x", contadorMem) }); // Insertar en la tabla de Símbolos
                         contadorMem += se.contarBytesDS(vals[1], vals[2]); // Contar los bytes de la variable correcta
                     } else if (vals[1].equalsIgnoreCase("equ")) {
-                        modeloSimbolos.addRow(new Object[] { vals[0], vals[1], "Constante", vals[2], "N/A" }); // Insertar
-                                                                                                               // en la
-                                                                                                               // tabla
-                                                                                                               // de
-                                                                                                               // Símbolos
+                        modeloSimbolos.addRow(new Object[] { vals[0], vals[1], "Constante", vals[2], "N/A" }); // Insertar en la tabla de Símbolos
                     }
                 } else if (vals.length > 3) { // Detecta variables con dup o dupy
                     if (vals.length == 5) {
@@ -275,15 +262,18 @@ public class MainWindow extends JFrame {
         // ? Mejorar la generacion de stack segment
         for (var a : SS) {
             var aux = se.semanticaSG(a);
-            semantica.add(new Object[] { a, aux }); // Insertar en la tabla de Semantica los valores correctos e
-                                                    // incorrectos del Stack Segment
+            semantica.add(new Object[] { a, aux });
         }
 
         // ? Mejorar la generacion de code segment
         for (var a : CS) {
             var aux = se.semanticaCS(a, ACCM, Simb, Etiq, Cons);
-            semantica.add(new Object[] { a, aux }); // Insertar en la tabla de Semantica los valores correctos e
-                                                    // incorrectos del Code Segment
+            semantica.add(new Object[] { a, aux });
+            var x = a.split(" ");
+            if(elementos.clasElementoCS(x[0].toUpperCase(), null).equals("Etiqueta")){
+                modeloSimbolos.addRow(new Object[] { x[0].subSequence(0, x[0].length() - 1), "N/A", "Etiqueta", "N/A", "Pendiente" });
+            }
+
         }
 
         tablaRenglones.setElementos(semantica);
