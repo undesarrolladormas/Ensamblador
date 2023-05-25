@@ -38,6 +38,12 @@ public class TablaElementos extends JPanel{
                 return false;
             }
         };
+
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(27);
+        tabla.getColumnModel().getColumn(1).setPreferredWidth(270);
+        tabla.getColumnModel().getColumn(2).setPreferredWidth(180);
+        tabla.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
         this.noElementos = 10;
 
         JButton btnAnterior = new JButton("Anterior");

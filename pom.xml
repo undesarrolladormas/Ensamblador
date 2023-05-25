@@ -6,9 +6,10 @@
 
   <groupId>mx.uaemex.ensamblador</groupId>
   <artifactId>ensamblador</artifactId>
-  <version>0.2</version>
+  <version>0.5</version>
+  <packaging>jar</packaging>
 
-  <name>ensamblador</name>
+  <name>Ensamblador</name>
   <!-- FIXME change it to the project's website -->
   <url>http://www.example.com</url>
 
@@ -56,6 +57,16 @@
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
           <version>3.0.2</version>
+          <configuration>
+            <outputDirectory>./build</outputDirectory>
+            <archive>
+              <manifest>
+                <addClasspath>true</addClasspath>
+                <classpathPrefix>lib/</classpathPrefix>
+                <mainClass>mx.uaemex.ensamblador.App</mainClass>
+              </manifest>
+            </archive>
+          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
@@ -75,29 +86,23 @@
           <version>3.0.0</version>
         </plugin>
         <plugin>
-          <artifactId>maven-assembly-plugin</artifactId>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <outputDirectory>${project.build.directory}/../build/lib</outputDirectory>
+            <excludeTransitive>false</excludeTransitive>
+            <stripVersion>false</stripVersion>
+            <includeScope>compile</includeScope>
+          </configuration>
           <executions>
             <execution>
-              <id>make-assembly</id> 
-              <phase>package</phase>
+              <id>copy-dependencies</id>
+              <phase>prepare-package</phase>
               <goals>
-                <goal>single</goal>
+                <goal>copy-dependencies</goal>
               </goals>
             </execution>
           </executions>
-          <configuration>
-            <descriptorRefs>
-              <descriptorRef>jar-with-dependencies</descriptorRef>
-            </descriptorRefs>
-            <appendAssemblyId>true</appendAssemblyId>
-            <finalName>${project.artifactId}-${project.version}</finalName>
-            <outputDirectory>${project.build.directory}</outputDirectory>
-            <archive>
-              <manifest>
-                <mainClass>mx.uaemex.ensamblador.App</mainClass>
-              </manifest>
-            </archive>
-          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>

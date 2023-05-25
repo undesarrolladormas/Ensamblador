@@ -260,6 +260,7 @@ public class Semantica {
                         }
                     }
                 }
+                if(parts.length > 2) return cad += "La instrucción no lleva más de un operando";
                 if (!Desplazamiento(linea, Cons, Simb).equalsIgnoreCase("Null")) {
                     return cad = "Correcto";
                 }
@@ -830,70 +831,18 @@ public class Semantica {
         int contI = 0;
         String parts[] = linea.split(" ");
         switch (parts[0].toUpperCase()) {
-            case "AAA":
-                if (parts.length == 1) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            case "CLC":
-                if (parts.length == 1) {
-                    return 1;
-                } else {
-                    return 0;
-                }
             case "CMPSW":
-                if (parts.length == 1) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            case "MOVSB":
-                if (parts.length == 1) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            case "INTO":
-                if (parts.length == 1) {
-                    return 1;
-                } else {
-                    return 0;
-                }
             case "PUSHA":
+            case "CWD":
+            case "POPF":
+            case "AAS":
+            case "CBW":
                 if (parts.length == 1) {
                     return 1;
                 } else {
                     return 0;
                 }
-            case "STD":
-                if (parts.length == 1) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            case "AAD":
-                if (parts.length == 1) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            case "DEC":
-                if (parts[1].matches(reg)) {
-                    return 2;
-                } else {
-                    String desplazamiento = Desplazamiento(linea, Cons, Simb);
-                    if (desplazamiento.equalsIgnoreCase("Sind")) {
-                        return 2;
-                    } else if (desplazamiento.equalsIgnoreCase("d8")) {
-                        return 3;
-                    } else if (desplazamiento.equalsIgnoreCase("d16") || desplazamiento.equalsIgnoreCase("Variable")) {
-                        return 4;
-                    } else if (desplazamiento.equalsIgnoreCase("null")) {
-                        return 0;
-                    }
-                }
-            case "IDIV":
+            case "DIV":
                 for (int i = 0; i < Simb.size(); i++) {
                     if (parts[1].equalsIgnoreCase(Simb.get(i))) {
                         return 4;
@@ -913,21 +862,8 @@ public class Semantica {
                         return 0;
                     }
                 }
-            case "INT":
-                if (parts[1].matches(bin) && (convierteBaD(parts[1]) >= 0 && convierteBaD(parts[1]) <= 128)) {
-                    return 2;
-                }
-                if (parts[1].matches(hex) && (convierteHaD(parts[1]) >= 0 && convierteHaD(parts[1]) <= 128)) {
-                    return 2;
-                }
-                if (parts[1].matches(num) && (Integer.parseInt(parts[1]) >= 0 && Integer.parseInt(parts[1]) <= 128)) {
-                    return 2;
-                }
-                if (parts[1].matches(Cons)) {
-                    return 4;
-                }
-                break;
             case "NOT":
+            case "NEG":
                 if (parts[1].matches(reg)) {
                     return 2;
                 } else {
@@ -943,117 +879,6 @@ public class Semantica {
                     }
                 }
             case "ADC":
-                if (parts[1].matches(reg) && parts[2].matches(reg)) {
-                    return 2;
-                } else if (parts[1].matches(reg) && parts[parts.length - 1].matches(instan)) {
-                    if (Integer.parseInt(parts[parts.length - 1]) >= 0
-                            && Integer.parseInt(parts[parts.length - 1]) <= 128) {
-                        return 3;
-                    } else if (Integer.parseInt(parts[parts.length - 1]) >= 129
-                            && Integer.parseInt(parts[parts.length - 1]) <= 65535) {
-                        return 4;
-                    }
-
-                } else if (parts[1].matches(reg) && parts[parts.length - 1].matches(hex)) {
-                    if (convierteHaD(parts[parts.length - 1]) >= 0 && convierteHaD(parts[parts.length - 1]) <= 128) {
-                        return 3;
-                    } else if (convierteHaD(parts[parts.length - 1]) >= 129
-                            && convierteHaD(parts[parts.length - 1]) <= 65535) {
-                        return 4;
-                    }
-
-                } else if (parts[1].matches(reg) && parts[parts.length - 1].matches(bin)) {
-                    if (convierteBaD(parts[parts.length - 1]) >= 0 && convierteBaD(parts[parts.length - 1]) <= 128) {
-                        return 3;
-                    } else if (convierteBaD(parts[parts.length - 1]) >= 129
-                            && convierteBaD(parts[parts.length - 1]) <= 65535) {
-                        return 4;
-                    }
-                } else if (parts[1].matches(reg) && parts[parts.length - 1].matches(Cons)) {
-                    return 4;
-                } else if ((parts[1].equalsIgnoreCase("WORD") || parts[1].equalsIgnoreCase("BYTE")
-                        || parts[1].contains("["))
-                        && parts[parts.length - 1].matches(reg)) {
-                    String desplazamiento = Desplazamiento(linea, Cons, Simb);
-                    if (desplazamiento.equalsIgnoreCase("Sind")) {
-                        return 2;
-                    } else if (desplazamiento.equalsIgnoreCase("d8")) {
-                        return 3;
-                    } else if (desplazamiento.equalsIgnoreCase("d16")) {
-                        return 4;
-                    } else if (desplazamiento.equalsIgnoreCase("null")) {
-                        return 0;
-                    }
-                } else if (parts[1].matches(reg) && ((parts[2].equalsIgnoreCase("WORD"))
-                        || parts[2].equalsIgnoreCase("BYTE") || parts[2].contains("["))) {
-                    String desplazamiento = Desplazamiento(linea, Cons, Simb);
-                    if (desplazamiento.equalsIgnoreCase("Sind")) {
-                        return 2;
-                    } else if (desplazamiento.equalsIgnoreCase("d8")) {
-                        return 3;
-                    } else if (desplazamiento.equalsIgnoreCase("d16")) {
-                        return 4;
-                    } else if (desplazamiento.equalsIgnoreCase("null")) {
-                        return 0;
-                    }
-                } else if (parts[parts.length - 1].matches(Cons)
-                        && (parts[1].equalsIgnoreCase("WORD") || parts[1].equalsIgnoreCase("BYTE"))
-                        || parts[1].contains("[")) {
-                    String desplazamiento = Desplazamiento(linea, Cons, Simb);
-                    if (desplazamiento.equalsIgnoreCase("Sind")) {
-                        return 4;
-                    } else if (desplazamiento.equalsIgnoreCase("d8")) {
-                        return 5;
-                    } else if (desplazamiento.equalsIgnoreCase("d16")) {
-                        return 6;
-                    }
-                } else if ((parts[parts.length - 1].matches(instan + "|" + hex + "|" + bin))
-                        && (parts[1].equalsIgnoreCase("WORD") || parts[1].equalsIgnoreCase("BYTE"))
-                        || parts[1].contains("[")) {
-                    String desplazamiento = Desplazamiento(linea, Cons, Simb);
-                    if (desplazamiento.equalsIgnoreCase("Sind") && (Integer.parseInt(parts[parts.length - 1]) >= 0
-                            && Integer.parseInt(parts[parts.length - 1]) <= 128)) {
-                        return 3;
-                    } else if (desplazamiento.equalsIgnoreCase("d8") && (Integer.parseInt(parts[parts.length - 1]) >= 0
-                            && Integer.parseInt(parts[parts.length - 1]) <= 128)) {
-                        return 4;
-                    } else if (desplazamiento.equalsIgnoreCase("d16") && (Integer.parseInt(parts[parts.length - 1]) >= 0
-                            && Integer.parseInt(parts[parts.length - 1]) <= 128)) {
-                        return 5;
-                    } else if (desplazamiento.equalsIgnoreCase("Sind")
-                            && (Integer.parseInt(parts[parts.length - 1]) >= 129
-                                    && Integer.parseInt(parts[parts.length - 1]) <= 65535)) {
-                        return 4;
-                    } else if (desplazamiento.equalsIgnoreCase("d8")
-                            && (Integer.parseInt(parts[parts.length - 1]) >= 129
-                                    && Integer.parseInt(parts[parts.length - 1]) <= 65535)) {
-                        return 5;
-                    } else if (desplazamiento.equalsIgnoreCase("d16")
-                            && (Integer.parseInt(parts[parts.length - 1]) >= 129
-                                    && Integer.parseInt(parts[parts.length - 1]) <= 65535)) {
-                        return 6;
-                    } else if (desplazamiento.equalsIgnoreCase("null")) {
-                        return 0;
-                    }
-                }
-                for (int i = 0; i < Simb.size(); i++) {
-                    if (parts[1].matches(reg) && parts[2].equalsIgnoreCase(Simb.get(i))) {
-                        return 4;
-                    } else if (parts[1].equalsIgnoreCase(Simb.get(i)) && parts[2].matches(reg)) {
-                        return 4;
-                    } else if (parts[1].equalsIgnoreCase(Simb.get(i))
-                            && parts[2].matches(instan + "|" + bin + "|" + hex)) {
-                        if (Integer.parseInt(parts[2]) >= 0 && Integer.parseInt(parts[2]) <= 128) {
-                            return 5;
-                        } else if (Integer.parseInt(parts[2]) >= 129 && Integer.parseInt(parts[2]) <= 65535) {
-                            return 6;
-                        }
-                    } else if (parts[1].equalsIgnoreCase(Simb.get(i)) && parts[2].matches(Cons)) {
-                        return 6;
-                    }
-                }
-                break;
-            case "CMP":
                 if (parts[1].matches(reg) && parts[2].matches(reg)) {
                     return 2;
                 } else if (parts[1].matches(reg) && parts[parts.length - 1].matches(instan)) {
@@ -1203,6 +1028,7 @@ public class Semantica {
             case "JNC":
             case "JNZ":
             case "JZ":
+            case "LOOPNZ":
                 try {
                     if (parts[1].matches(decEti)) {
                         for (int i = 0; i < Etiq.size(); i++) {

@@ -36,6 +36,10 @@ public class TablaRenglones extends JPanel {
             }
         };
         this.noElementos = 10;
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(27);
+        tabla.getColumnModel().getColumn(1).setPreferredWidth(270);
+        tabla.getColumnModel().getColumn(2).setPreferredWidth(180);
+        tabla.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
         JButton btnAnterior = new JButton("Anterior");
         btnAnterior.addActionListener(e -> changePage(-1));

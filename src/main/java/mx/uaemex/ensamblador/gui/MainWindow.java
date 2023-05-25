@@ -24,7 +24,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
@@ -33,6 +32,7 @@ import mx.uaemex.ensamblador.gui.tabla.TablaElementos;
 import mx.uaemex.ensamblador.gui.tabla.TablaRenglones;
 import mx.uaemex.ensamblador.classes.ClasificadorElementos;
 import mx.uaemex.ensamblador.classes.ClasificadorSegmentos;
+import mx.uaemex.ensamblador.classes.Codificador;
 import mx.uaemex.ensamblador.classes.LimpiadorCodigo;
 import mx.uaemex.ensamblador.classes.Semantica;
 
@@ -46,7 +46,8 @@ public class MainWindow extends JFrame {
         this.init();
     }
 
-    private JTextArea input;
+    private JTable input;
+    private DefaultTableModel modeloInput;
     private JTable simbolos;
     private DefaultTableModel modeloSimbolos;
     private TablaElementos tablaElementos;
@@ -64,6 +65,9 @@ public class MainWindow extends JFrame {
             + "|" + "BX\\s*\\+\\s*" + "(" + instan + "|" + hex + "|" + bin + "|" + Cons + ")"
             + "|" + "SI\\s*\\+\\s*" + "(" + instan + "|" + hex + "|" + bin + "|" + Cons + ")"
             + "|" + "BX\\s*\\+\\s*(SI|DI)\\s*\\+\\s*" + "(" + instan + "|" + hex + "|" + bin + "|" + Cons + ")";
+    ArrayList<String> contEtiq = new ArrayList<>();
+    ArrayList<String> Vars = new ArrayList<>();
+    ArrayList<String> contVars = new ArrayList<>();
 
     private ArrayList<String> content;
 
@@ -85,16 +89,27 @@ public class MainWindow extends JFrame {
             }
         });
 
-        JMenu exec = new JMenu("Execution");
+        JMenu exec = new JMenu("Operations");
         bar.add(exec);
         JMenuItem listarItem = new JMenuItem("List");
         listarItem.setAccelerator(KeyStroke.getKeyStroke('P', Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         exec.add(listarItem);
-        listarItem.addActionListener((e -> {listar();}));
+        listarItem.addActionListener((e -> {
+            listar();
+        }));
 
-        input = new JTextArea();
+        input = new JTable(modeloInput = new DefaultTableModel(new String[] { "Direccion", "Codigo" }, 0)) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         input.setFont(new Font("Consolas", Font.PLAIN, 14));
-        input.setEditable(false);
+
+        input.getColumnModel().getColumn(0).setWidth(170);
+        input.getColumnModel().getColumn(1).setPreferredWidth(800);
+        input.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+
         JScrollPane scrollPane = new JScrollPane(input, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
@@ -127,11 +142,11 @@ public class MainWindow extends JFrame {
         gbc.weightx = 1;
         gbc.weighty = 1;
         gbc.fill = GridBagConstraints.BOTH;
-        String[] columnNames_2 = { "No", "Linea", "Estado" };
+        String[] columnNames_2 = { "No", "Linea", "Codificacion" };
         this.add(tablaRenglones = new TablaRenglones(columnNames_2), gbc);
 
         String[] columnNamesFull = { "Simbolo", "Tamaño", "Tipo", "Valor", "Direccion" };
-        simbolos = new JTable(modeloSimbolos = new DefaultTableModel(null, columnNamesFull)){
+        simbolos = new JTable(modeloSimbolos = new DefaultTableModel(null, columnNamesFull)) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -148,10 +163,10 @@ public class MainWindow extends JFrame {
     }
 
     private void openFile() {
-        input.setText("");
+        modeloInput.setRowCount(0);
         content = new ArrayList<>();
         JFileChooser filechoose = new JFileChooser();
-        FileNameExtensionFilter filtro = new FileNameExtensionFilter("*.asm", "asm");
+        FileNameExtensionFilter filtro = new FileNameExtensionFilter("*Assembly Source File", "asm");
         filechoose.setFileFilter(filtro);
         filechoose.showOpenDialog(this);
         File archivo = filechoose.getSelectedFile();
@@ -163,7 +178,7 @@ public class MainWindow extends JFrame {
                 String st;
                 while ((st = br.readLine()) != null) {
                     content.add(st);
-                    this.input.setText(this.input.getText() + st + "\n");
+                    modeloInput.addRow(new Object[] { 0, st });
                 }
                 br.close();
             } catch (FileNotFoundException ex) {
@@ -171,10 +186,12 @@ public class MainWindow extends JFrame {
             } catch (IOException ex) {
                 Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
             }
+            input.setModel(modeloInput);
         }
     }
 
     private void listar() {
+        String pseudoins = "data segment|stack segment|code segment|ends|ENDS|ends";
         ArrayList<String> Simb = new ArrayList<>();
         ArrayList<String> Etiq = new ArrayList<>();
         String Cons = ""; // String para almacenar las constantes del data segment
@@ -216,10 +233,20 @@ public class MainWindow extends JFrame {
         // ? Mejorar la generacion de data segment
         this.modeloSimbolos.setRowCount(0);
         int contadorMem = 0; // Se inicializa el contador de la memoria al comenzar el Segmento de datos
-        // int contG = 0;//Contador general
-        // String contH = "0000";//Contador hexadecimal
+        int contG = 0;// Contador general
+        String contH = "0000";// Contador hexadecimal
+        int cont = 0;
         for (var a : DS) {
             var aux = se.semanticaDS(a);
+
+            String simbolos = se.semanticaDS(a);
+            if (a.equalsIgnoreCase("data segment")) {//Contador 
+                contH = "";
+            } else if (cont > 0) {
+                contG += se.ContadorMemDS(DS.get(cont - 1), simbolos);
+                contH = String.format("%04x", contG).toUpperCase();
+            }
+
             semantica.add(new Object[] { a, aux });
             if (aux.equalsIgnoreCase("Correcto")) {
                 String[] vals = a.split(" ");
@@ -254,10 +281,17 @@ public class MainWindow extends JFrame {
                         contadorMem += se.contarBytesDSE(vals[1], vals[2]); // Contar los bytes de la variable correcta
                     }
                 }
-            }
 
+                if (elementos.clasElementoDS(vals[0].toLowerCase()).equals("variable")) {
+                    Vars.add(vals[0]);
+                    contVars.add(contH);
+                }
+            }
+            cont++;
         }
         simbolos.setModel(modeloSimbolos);
+
+        Codificador codificador = new Codificador();
 
         // ? Mejorar la generacion de stack segment
         for (var a : SS) {
@@ -266,17 +300,55 @@ public class MainWindow extends JFrame {
         }
 
         // ? Mejorar la generacion de code segment
+        cont = 0;
+        contadorMem = 0; //Se inicializa el contador de la memoria al comenzar el Segmento de pila
         for (var a : CS) {
             var aux = se.semanticaCS(a, ACCM, Simb, Etiq, Cons);
-            semantica.add(new Object[] { a, aux });
-            var x = a.split(" ");
-            if(elementos.clasElementoCS(x[0].toUpperCase(), null).equals("Etiqueta")){
-                modeloSimbolos.addRow(new Object[] { x[0].subSequence(0, x[0].length() - 1), "N/A", "Etiqueta", "N/A", "Pendiente" });
+
+            String codifH = codificador.codificacionCS(CS.get(cont).toUpperCase(), ACCM, Simb, Etiq, Cons, Vars, contEtiq, contVars, contH);
+            if (a.equalsIgnoreCase("code segment")) {
+                contG = 0;
+                contH = String.format("%04x", contG).toUpperCase();
+            } else{
+                contG += se.ContadorMemCS(a, aux, Etiq, Simb, Cons, ACCM);
+                System.out.println(contG);
+                contH = String.format("%04x", contG).toUpperCase();
+                System.out.println(aux + " === " +contH);
+            }
+            String vals[] = this.SeparaElementos(a);
+            if (aux.equalsIgnoreCase("Correcto") && !CS.get(cont).toLowerCase().matches(pseudoins)) {
+                switch (vals.length) {
+                    case 1:
+                        if (elementos.clasElementoCS(vals[0].toUpperCase(), null).equals("Etiqueta")) {
+                            contEtiq.add(contH);
+                        }
+                        break;
+                }
             }
 
+            if (aux.equalsIgnoreCase("Correcto")) {
+                aux = codificador.codificacionCS(a, ACCM, Simb, Etiq, Cons, Vars, contEtiq, contVars, codifH);
+            }
+            semantica.add(new Object[] { a, aux });
+            var x = a.split(" ");
+            if (elementos.clasElementoCS(x[0].toUpperCase(), null).equals("Etiqueta")) {
+                modeloSimbolos.addRow(
+                        new Object[] { x[0].subSequence(0, x[0].length() - 1), "-", "Etiqueta", "-", contH });
+            }
+            cont++;
         }
 
+        for (var n: contEtiq) {
+            int i = 0;
+            modeloSimbolos.setValueAt(n, i, 4);
+            i++;
+        }
+        simbolos.setModel(modeloSimbolos);
         tablaRenglones.setElementos(semantica);
     }
 
+    public String[] SeparaElementos(String linea) {//Separar por espacios
+        String elementos[] = linea.split(" ");
+        return elementos;
+    }
 }
