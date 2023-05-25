@@ -311,9 +311,7 @@ public class MainWindow extends JFrame {
                 contH = String.format("%04x", contG).toUpperCase();
             } else{
                 contG += se.ContadorMemCS(a, aux, Etiq, Simb, Cons, ACCM);
-                System.out.println(contG);
                 contH = String.format("%04x", contG).toUpperCase();
-                System.out.println(aux + " === " +contH);
             }
             String vals[] = this.SeparaElementos(a);
             if (aux.equalsIgnoreCase("Correcto") && !CS.get(cont).toLowerCase().matches(pseudoins)) {
