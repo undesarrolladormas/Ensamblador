@@ -53,6 +53,9 @@ public class MainWindow extends JFrame {
     private TablaElementos tablaElementos;
     private TablaRenglones tablaRenglones;
 
+    private ArrayList<String> lineasCorrectas = new ArrayList<>();
+    private ArrayList<String> contadorLineas = new ArrayList<>();
+
     private final String instan = "[0-9]+";
     private final String hex = "(0(\\d|[a-fA-F])+(h|H))";
     private final String bin = "(0|1)+(B|b)";
@@ -191,6 +194,8 @@ public class MainWindow extends JFrame {
     }
 
     private void listar() {
+        lineasCorrectas = new ArrayList<>();
+        contadorLineas = new ArrayList<>();
         String pseudoins = "data segment|stack segment|code segment|ends|ENDS|ends";
         ArrayList<String> Simb = new ArrayList<>();
         ArrayList<String> Etiq = new ArrayList<>();
@@ -240,7 +245,7 @@ public class MainWindow extends JFrame {
             var aux = se.semanticaDS(a);
 
             String simbolos = se.semanticaDS(a);
-            if (a.equalsIgnoreCase("data segment")) {//Contador 
+            if (a.equalsIgnoreCase("data segment")) {// Contador
                 contH = "";
             } else if (cont > 0) {
                 contG += se.ContadorMemDS(DS.get(cont - 1), simbolos);
@@ -268,7 +273,11 @@ public class MainWindow extends JFrame {
                                 String.format("%04x", contadorMem) }); // Insertar en la tabla de Símbolos
                         contadorMem += se.contarBytesDS(vals[1], vals[2]); // Contar los bytes de la variable correcta
                     } else if (vals[1].equalsIgnoreCase("equ")) {
-                        modeloSimbolos.addRow(new Object[] { vals[0], vals[1], "Constante", vals[2], "N/A" }); // Insertar en la tabla de Símbolos
+                        modeloSimbolos.addRow(new Object[] { vals[0], vals[1], "Constante", vals[2], "N/A" }); // Insertar
+                                                                                                               // en la
+                                                                                                               // tabla
+                                                                                                               // de
+                                                                                                               // Símbolos
                     }
                 } else if (vals.length > 3) { // Detecta variables con dup o dupy
                     if (vals.length == 5) {
@@ -301,15 +310,16 @@ public class MainWindow extends JFrame {
 
         // ? Mejorar la generacion de code segment
         cont = 0;
-        contadorMem = 0; //Se inicializa el contador de la memoria al comenzar el Segmento de pila
+        contadorMem = 0; // Se inicializa el contador de la memoria al comenzar el Segmento de pila
         for (var a : CS) {
             var aux = se.semanticaCS(a, ACCM, Simb, Etiq, Cons);
 
-            String codifH = codificador.codificacionCS(CS.get(cont).toUpperCase(), ACCM, Simb, Etiq, Cons, Vars, contEtiq, contVars, contH);
+            String codifH = codificador.codificacionCS(CS.get(cont).toUpperCase(), ACCM, Simb, Etiq, Cons, Vars,
+                    contEtiq, contVars, contH);
             if (a.equalsIgnoreCase("code segment")) {
                 contG = 0;
                 contH = String.format("%04x", contG).toUpperCase();
-            } else{
+            } else {
                 contG += se.ContadorMemCS(a, aux, Etiq, Simb, Cons, ACCM);
                 contH = String.format("%04x", contG).toUpperCase();
             }
@@ -323,7 +333,6 @@ public class MainWindow extends JFrame {
                         break;
                 }
             }
-
             if (aux.equalsIgnoreCase("Correcto")) {
                 aux = codificador.codificacionCS(a, ACCM, Simb, Etiq, Cons, Vars, contEtiq, contVars, codifH);
             }
@@ -334,18 +343,128 @@ public class MainWindow extends JFrame {
                         new Object[] { x[0].subSequence(0, x[0].length() - 1), "-", "Etiqueta", "-", contH });
             }
             cont++;
+
+            // Agregar la direccion de memoria a la tabla que contiene el archivo de entrada
+            lineasCorrectas.add(a);
+            contadorLineas.add(contH);
         }
 
-        for (var n: contEtiq) {
-            int i = 0;
-            modeloSimbolos.setValueAt(n, i, 4);
+        int i = 0; // Posicion actual de las listas
+
+        int j = 0;
+        // Agregamos el apuntador del segmento de datos
+        while (!modeloInput.getValueAt(i, 1).toString().trim().equalsIgnoreCase("data segment"))  i ++;
+        while (i < modeloInput.getRowCount() && j < modeloSimbolos.getRowCount()) {
+            if (modeloInput.getValueAt(i, 1).toString().trim().equalsIgnoreCase("data segment")) {
+                modeloInput.setValueAt("0000", i, 0);
+            } else if (modeloInput.getValueAt(i, 1).toString().trim().equalsIgnoreCase("ends")) {
+                modeloInput.setValueAt(modeloInput.getValueAt(i -1, 0), i, 0);
+                modeloInput.setValueAt("0000", i + 1, 0);
+                i++;
+                break;
+            } else {
+                var separados = modeloInput.getValueAt(i, 1).toString().trim().split(" ");
+                if (separados.length > 1) {
+                    var aux =  modeloSimbolos.getValueAt(j, 4);
+                    if (((String)aux).equalsIgnoreCase("N/A")){
+                        modeloInput.setValueAt(modeloInput.getValueAt(i -1, 0), i, 0);
+                    } else if (separados[0].equalsIgnoreCase(modeloSimbolos.getValueAt(j, 0).toString().trim())) {
+                        modeloInput.setValueAt(modeloSimbolos.getValueAt(j, 4), i, 0);
+                        j++;
+                    } else {
+                        modeloInput.setValueAt(modeloSimbolos.getValueAt(j, 4), i, 0);
+                    }
+                }
+            }
+            i++;
+        }
+
+        // Agregamos el segmento de stack
+        i = 0;
+        var stacksize = "0000";
+        while (!modeloInput.getValueAt(i, 1).toString().trim().equalsIgnoreCase("stack segment"))  i ++;
+        while (i < modeloInput.getRowCount() ){
+            if (modeloInput.getValueAt(i, 1).toString().trim().equalsIgnoreCase("stack segment")) {
+                modeloInput.setValueAt("0000", i, 0);
+            } else if (modeloInput.getValueAt(i, 1).toString().trim().equalsIgnoreCase("ends")) {
+                modeloInput.setValueAt(stacksize, i, 0);
+                modeloInput.setValueAt("0000", i + 1, 0);
+                i++;
+                break;
+            } else {
+                var separados = modeloInput.getValueAt(i, 1).toString().trim().split(" ");
+                if (separados.length > 1) {
+                    int size = separados[0].equalsIgnoreCase("db") ? 1 : separados[0].equalsIgnoreCase("dw") ? 2 : 0;
+                    int num = 0;
+                    if(separados[1].matches(hex)) {
+                        var nosufix = separados[1].split("H");
+                        num = Integer.parseInt(nosufix[0], 16);
+                    } else if (separados[1].matches(instan)) {
+                        num = Integer.parseInt(separados[1], 10);
+                    } else if (separados[1].matches(bin)) {
+                        var nosufix = separados[1].split("B");
+                        num = Integer.parseInt(nosufix[0], 2);
+                    }
+                    stacksize = String.format("%04x", (size * num)).toUpperCase();
+                    
+                }
+                modeloInput.setValueAt(modeloInput.getValueAt(i -1, 0), i, 0);
+            }
+            i++;
+        }
+
+        // Agregamos el apuntador del segmento de codigo
+        i = 0;
+        j = 0; // Posicion actual de las listas
+        int k = 0; // Posicion actual de las listas
+
+        while (!modeloInput.getValueAt(i, 1).toString().trim().equalsIgnoreCase("code segment"))  i ++;
+        
+        while (i < modeloInput.getRowCount() && j < lineasCorrectas.size() && k < contadorLineas.size()) {
+            if (lineasCorrectas.get(j)
+                    .equalsIgnoreCase(modeloInput.getValueAt(i, 1).toString().trim().replace(",", " "))) {
+                if (modeloInput.getValueAt(i, 1).toString().trim().equalsIgnoreCase("code segment")) {
+                    modeloInput.setValueAt("0000", i, 0);
+                } else if (modeloInput.getValueAt(i, 1).toString().trim().equalsIgnoreCase("ends")) {
+                    modeloInput.setValueAt(contadorLineas.get(k), i, 0);
+                    i++;
+                    break;
+                } else {
+                    modeloInput.setValueAt(contadorLineas.get(k), i, 0);
+                    k = k + 1;
+                }
+                j++;
+            } else {
+                modeloInput.setValueAt(contadorLineas.get(k), i, 0);
+            }
+            i++;
+        }
+
+        i = 0;
+
+        while (i < modeloInput.getRowCount()) {
+            var val = modeloInput.getValueAt(i, 0);
+            if (val == null || val.toString().trim().equalsIgnoreCase("") || val.toString().trim().equalsIgnoreCase("0")) {
+                modeloInput.setValueAt("0000", i, 0);
+            }
+            i++;
+        }
+
+        input.setModel(modeloInput);
+
+        // Agregar las etiquetas a la tabla de simbolos
+
+        for (var n : contEtiq) {
+            int p = 0;
+            modeloSimbolos.setValueAt(n, p, 4);
             i++;
         }
         simbolos.setModel(modeloSimbolos);
         tablaRenglones.setElementos(semantica);
+
     }
 
-    public String[] SeparaElementos(String linea) {//Separar por espacios
+    public String[] SeparaElementos(String linea) {// Separar por espacios
         String elementos[] = linea.split(" ");
         return elementos;
     }

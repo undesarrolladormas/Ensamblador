@@ -402,7 +402,6 @@ public class Codificador {
                     return cad;
                 }
                 break;
-
             // Instrucciones dos operandos
             case "ADC":
                 if (parts.length == 3 && (parts[1].matches(reg) && parts[2].matches(reg))) { // REG, REG
@@ -1216,7 +1215,7 @@ public class Codificador {
                         || parts[0].equalsIgnoreCase("CODE") && parts[1].equalsIgnoreCase("SEGMENT")) {
                     cad = " ";
                 } else {
-                    cad = "Pendiente de implementarr";
+                    cad = "No implementado";
                     break;
                 }
         }
